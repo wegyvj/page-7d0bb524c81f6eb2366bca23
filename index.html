@@ -1,0 +1,271 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ayu 网络服务架构与配置指南</title><meta name="description" content="Ayu 为何能够满足多样化的数据传输需求？本文梳理 Ayu 服务方案的技术参数、客户端配置逻辑与常见疑问排查方式。"><meta name="keywords" content="Ayu, 网络接入, 订阅规格, 终端配置, 规则调度"><meta name="robots" content="index,follow"><link rel="canonical" href="https://p-007f01ce64.idaoyuan.cn/"><meta property="og:type" content="website"><meta property="og:title" content="Ayu 网络服务架构与配置指南"><meta property="og:description" content="Ayu 为何能够满足多样化的数据传输需求？本文梳理 Ayu 服务方案的技术参数、客户端配置逻辑与常见疑问排查方式。"><meta property="og:url" content="https://p-007f01ce64.idaoyuan.cn/"><meta property="og:site_name" content="Ayu"><script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "url": "https://p-007f01ce64.idaoyuan.cn/", "name": "Ayu 网络服务架构与配置指南", "description": "Ayu 为何能够满足多样化的数据传输需求？本文梳理 Ayu 服务方案的技术参数、客户端配置逻辑与常见疑问排查方式。", "inLanguage": "zh-CN"}</script><meta name="publisher-task" content="7d0bb524c81f6eb2366bca23:3602a5adfdf5d7972226309820873dea7cd7e80ddce68e5bcfe3f1401b4c13b2:17863691444edab8fffd"></head><body id="top"><style>
+    *, *::before, *::after {box-sizing: border-box;margin: 0;padding: 0}
+    body {background-color: #0b0d0e;color: #e5e9ec;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;line-height: 1.6;-webkit-font-smoothing: antialiased}
+    a {color: #00ff66;text-decoration: none;transition: opacity 0.2s}
+    a:hover {opacity: 0.8}
+
+    /* 顶部面包屑与目录导航 */
+    .top-nav {position: sticky;top: 0;z-index: 50;background-color: rgba(11, 13, 14, 0.95);border-bottom: 1px solid #1f262a;backdrop-filter: blur(8px);padding: 12px 24px;display: flex;flex-wrap: wrap;justify-content: space-between;align-items: center;gap: 12px;font-size: 0.875rem}
+    .breadcrumbs {display: flex;align-items: center;gap: 8px;color: #7b8893}
+    .breadcrumbs span.current {color: #00ff66;font-weight: 600}
+    .nav-toc {display: flex;gap: 18px}
+    .nav-toc a {color: #a3b1bc}
+    .nav-toc a:hover {color: #00ff66}
+
+    main {max-width: 1200px;margin: 0 auto;padding: 32px 24px 80px}
+
+    /* 首屏：左文右信息面板不对称分栏 */
+    .hero-split {display: grid;grid-template-columns: 1.3fr 1fr;gap: 40px;align-items: center;padding: 48px 0 64px;border-bottom: 1px solid #1a2226}
+    .hero-left h1 {font-size: 2.75rem;line-height: 1.2;color: #ffffff;margin-bottom: 20px;letter-spacing: -0.02em}
+    .hero-left .highlight-brand {color: #00ff66;text-shadow: 0 0 20px rgba(0, 255, 102, 0.25)}
+    .hero-left p {font-size: 1.1rem;color: #9aa9b5;margin-bottom: 24px;max-width: 580px}
+    .hero-actions {display: flex;gap: 16px;align-items: center}
+    .btn-action {display: inline-block;background-color: #00ff66;color: #05140b;font-weight: 700;padding: 10px 22px;border-radius: 4px}
+    .btn-secondary {color: #00ff66;border: 1px solid #00ff66;padding: 9px 20px;border-radius: 4px;font-weight: 600}
+
+    .hero-right-panel {background: #101416;border: 1px solid #232d32;border-left: 3px solid #00ff66;padding: 24px;display: flex;flex-direction: column;gap: 18px}
+    .panel-title {font-size: 0.95rem;text-transform: uppercase;letter-spacing: 0.08em;color: #00ff66;display: flex;align-items: center;justify-content: space-between}
+    .panel-row {display: flex;justify-content: space-between;border-bottom: 1px dashed #1e272c;padding-bottom: 10px;font-size: 0.9rem}
+    .panel-label {color: #7b8893}
+    .panel-val {color: #f1f5f8;font-family: monospace}
+
+    /* 区域标题通用 */
+    .section-header {margin: 64px 0 28px}
+    .section-header h2 {font-size: 1.85rem;color: #ffffff;margin-bottom: 8px}
+    .section-header p {color: #8b99a4;font-size: 0.95rem}
+
+    /* 使用说明：编号大字压底卡片 */
+    .steps-grid {display: grid;grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));gap: 20px}
+    .step-card {position: relative;background: #111518;border: 1px solid #1f272c;padding: 32px 24px;overflow: hidden;min-height: 200px;display: flex;flex-direction: column;justify-content: flex-start}
+    .step-number {position: absolute;right: 12px;bottom: -15px;font-size: 6.5rem;font-weight: 900;color: rgba(0, 255, 102, 0.04);line-height: 1;user-select: none;pointer-events: none;font-family: monospace}
+    .step-card h3 {font-size: 1.15rem;color: #f0f4f7;margin-bottom: 10px;position: relative;z-index: 2}
+    .step-card p {font-size: 0.9rem;color: #8896a2;line-height: 1.5;position: relative;z-index: 2}
+
+    /* 套餐展示：横向对比表格 */
+    .table-container {overflow-x: auto;margin-top: 16px;border: 1px solid #1f272c;background: #101417}
+    .plans-table {width: 100%;border-collapse: collapse;text-align: left;font-size: 0.92rem}
+    .plans-table th, .plans-table td {padding: 16px 20px;border-bottom: 1px solid #1d2529;border-right: 1px solid #1d2529}
+    .plans-table th:last-child, .plans-table td:last-child {border-right: none}
+    .plans-table th {background: #14191d;color: #b0bfc9;font-weight: 600;font-size: 0.85rem;text-transform: uppercase;letter-spacing: 0.05em}
+    .plans-table tr.highlight-row {background: rgba(0, 255, 102, 0.03)}
+    .plans-table tr.highlight-row td.plan-title-col {border-left: 3px solid #00ff66}
+    .plans-table .plan-name {font-weight: 700;color: #ffffff;font-size: 1.05rem}
+    .plans-table .price-main {font-size: 1.15rem;font-weight: 700;color: #00ff66;font-family: monospace}
+    .plans-table .price-sub {font-size: 0.8rem;color: #72818c;display: block;margin-top: 4px}
+    .tag-featured {display: inline-block;font-size: 0.72rem;background: #00ff66;color: #05140b;font-weight: 700;padding: 2px 6px;border-radius: 2px;margin-left: 8px;vertical-align: middle}
+
+    /* 客户端说明区块 */
+    .client-block {background: #111518;border: 1px solid #1f272c;padding: 28px;margin-top: 20px;display: grid;grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));gap: 24px}
+    .client-item h3 {font-size: 1.05rem;color: #ffffff;margin-bottom: 8px}
+    .client-item p {font-size: 0.88rem;color: #8b99a4;line-height: 1.5}
+
+    /* FAQ：双栏问答 */
+    .faq-grid {display: grid;grid-template-columns: 1fr 1fr;gap: 24px;margin-top: 20px}
+    .faq-item {background: #101416;border: 1px solid #1d252a;padding: 22px}
+    .faq-item h3 {font-size: 1.02rem;color: #00ff66;margin-bottom: 10px;line-height: 1.4}
+    .faq-item p {font-size: 0.88rem;color: #92a0ac;line-height: 1.6}
+
+    /* 底部声明 */
+    footer {border-top: 1px solid #1b2226;padding: 40px 24px;text-align: center;font-size: 0.85rem;color: #616e78;background: #090b0c}
+    footer p {margin-bottom: 8px}
+
+    /* 响应式调整 */
+    @media (max-width: 820px) {.hero-split {
+        grid-template-columns: 1fr;padding: 32px 0 40px;}
+      .faq-grid {
+        grid-template-columns: 1fr;}
+      .top-nav {
+        flex-direction: column;align-items: flex-start;}}
+  </style><nav class="top-nav">
+    <div class="breadcrumbs">
+      <a href="#">首页</a>
+      <span>/</span>
+      <span>平台体系</span>
+      <span>/</span>
+      <span class="current">Ayu 规格指南</span>
+    </div>
+    <div class="nav-toc">
+      <a href="#overview">方案概述</a>
+      <a href="#setup">配置步骤</a>
+      <a href="#plans">订阅矩阵</a>
+      <a href="#clients">终端支持</a>
+      <a href="#faq">常见问题</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero-split" id="overview">
+      <div class="hero-left">
+        <h1>如何借助 <span class="highlight-brand">Ayu</span> 规划你的分流网络？</h1>
+        <p>面对日益复杂的访问环境，网络规则的调度应当具备怎样的弹性？Ayu 梳理了标准化的流量池分配方式与多端接入方案，为你提供清晰、可验证的连接配置路线。</p>
+        <div class="hero-actions">
+          <a href="#plans" class="btn-action">查阅套餐参数</a>
+          <a href="#setup" class="btn-secondary">浏览分步流程</a>
+        </div>
+      </div>
+      <div class="hero-right-panel">
+        <div class="panel-title">
+          <span>Ayu 调度架构摘要</span>
+          <span>[规格状态]</span>
+        </div>
+        <div class="panel-row">
+          <span class="panel-label">基础协议支持</span>
+          <span class="panel-val">Shadowsocks / Clash 核心</span>
+        </div>
+        <div class="panel-row">
+          <span class="panel-label">路由模式</span>
+          <span class="panel-val">白名单 / 全局 / 规则分流</span>
+        </div>
+        <div class="panel-row">
+          <span class="panel-label">最高并发容纳</span>
+          <span class="panel-val">20 设备 (团队版)</span>
+        </div>
+        <div class="panel-row">
+          <span class="panel-label">数据周期</span>
+          <span class="panel-val">按自然月循环结算</span>
+        </div>
+        <div class="panel-row">
+          <span class="panel-label">支持服务时效</span>
+          <span class="panel-val">工单响应 / 客户经理</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="setup">
+      <div class="section-header">
+        <h2>新终端如何开始接入 Ayu？</h2>
+        <p>初次接入只需完成订阅获取、核心配置写入与节点匹配四个步骤。</p>
+      </div>
+      <div class="steps-grid">
+        <article class="step-card">
+          <div class="step-number">01</div>
+          <h3>选定并获取订阅链接</h3>
+          <p>根据团队或个人需求确认方案后，从个人管理面板复制专有订阅 URL。订阅串包含了接入地址及安全密钥。</p>
+        </article>
+        <article class="step-card">
+          <div class="step-number">02</div>
+          <h3>导入通用客户端</h3>
+          <p>将订阅 URL 贴入支持相应配置格式的第三方客户端中，触发初次同步以拉取可用节点名单及路由规则。</p>
+        </article>
+        <article class="step-card">
+          <div class="step-number">03</div>
+          <h3>选择分流策略</h3>
+          <p>确认采用规则模式（Rule）还是全局模式（Global）。推荐优先采用规则分流，确保内网及本地流量直连。</p>
+        </article>
+        <article class="step-card">
+          <div class="step-number">04</div>
+          <h3>链路连通性测试</h3>
+          <p>在客户端面板执行延迟测试或节点联通检查，选择延迟较低且响应完整的组别，启动本地代理开关。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="plans">
+      <div class="section-header">
+        <h2>哪个规格档位符合你的用量？</h2>
+        <p>通过横向指标对照，评估每个月度周期的吞吐要求与设备同时在线需求。</p>
+      </div>
+      <div class="table-container">
+        <table class="plans-table">
+          <thead>
+            <tr>
+              <th>服务版本</th>
+              <th>月付费用</th>
+              <th>年付方案</th>
+              <th>每月流量配额</th>
+              <th>同时在线设备</th>
+              <th>节点与线路特征</th>
+              <th>服务保障级别</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="plan-title-col">
+                <span class="plan-name">基础版</span>
+              </td>
+              <td><span class="price-main">¥15/月</span></td>
+              <td><span class="price-sub">按年付仅需 ¥150/年</span></td>
+              <td>100GB</td>
+              <td>3 台</td>
+              <td>普通线路节点池，支持基础流媒体解析</td>
+              <td>常规工单支持</td>
+            </tr>
+            <tr class="highlight-row">
+              <td class="plan-title-col">
+                <span class="plan-name">旗舰版</span>
+                <span class="tag-featured">推荐方案</span>
+              </td>
+              <td><span class="price-main">¥35/月</span></td>
+              <td><span class="price-sub">按年付仅需 ¥350/年</span></td>
+              <td>300GB</td>
+              <td>5 台</td>
+              <td>IPLC 专线游戏加速优化，全节点原生流媒体</td>
+              <td>7x24 优先工单响应</td>
+            </tr>
+            <tr>
+              <td class="plan-title-col">
+                <span class="plan-name">团队版</span>
+              </td>
+              <td><span class="price-main">¥85/月</span></td>
+              <td><span class="price-sub">按年付仅需 ¥850/年</span></td>
+              <td>1000GB</td>
+              <td>20 台</td>
+              <td>VIP 专属高带宽节点，企业定制路由规则</td>
+              <td>专属客户经理对接</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="clients">
+      <div class="section-header">
+        <h2>终端工具与环境应当如何搭配？</h2>
+        <p>Ayu 输出标准配置参数，用户可根据当前操作系统选用匹配的第三方通用核心。</p>
+      </div>
+      <div class="client-block">
+        <div class="client-item">
+          <h3>桌面操作系统 (Windows / macOS / Linux)</h3>
+          <p>建议使用兼容 Clash Core 或 v2ray 核心的桌面客户端。配置时支持通过订阅转换直接下发 YAML 格式配置文件，实现系统级网络代理与指定应用走独立代理的分流方案。</p>
+        </div>
+        <div class="client-item">
+          <h3>移动移动终端 (iOS / Android)</h3>
+          <p>可通过各应用市场支持订阅协议的工具载入配置。移动网络切换至 Wi-Fi 环境时，请注意开启客户端的“自动重连”与“重载规则”选项以维持会话稳定。</p>
+        </div>
+        <div class="client-item">
+          <h3>网关与软路由环境 (OpenWrt / Docker)</h3>
+          <p>如需实现全屋或办公局域网透明接入，可将 Ayu 订阅转换为软路由插件支持的配置文件。请注意根据设备 CPU 负载合理设置加密与分流算法。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="section-header">
+        <h2>关于 Ayu 你可能关心的具体细节？</h2>
+        <p>我们汇总了用户在网络分流规则配置、设备数上限与流量重置中最常提出的疑问。</p>
+      </div>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>超出同时在线设备数后会发生什么？</h3>
+          <p>当在线连接数超过套餐允许的上限时，系统将遵循后入挤出或阻止新连接发起的机制。若你的团队或家庭有多台设备需要长期常驻，建议调整为容纳 20 台的团队版本，或在局域网网关侧统一进行代理分流。</p>
+        </div>
+        <div class="faq-item">
+          <h3>流量配额是何时重置的？未用完是否结转？</h3>
+          <p>所有档位均按自然月周期或账单开通日进行重置。当月未使用的配额不会累积到下一个计费周期。在达到配额上限后，节点连接将暂停传输，直至周期重置或补购流量包。</p>
+        </div>
+        <div class="faq-item">
+          <h3>为什么部分节点测试正常但网页打不开？</h3>
+          <p>多数情况下与本地 DNS 污染或分流规则未生效有关。建议检查客户端是否开启了“Fake-IP”或系统 DNS 劫持防护，并确认路由模式是否正确设为“规则模式”而非“直接直连”。</p>
+        </div>
+        <div class="faq-item">
+          <h3>基础版与旗舰版在线路上有何实质差异？</h3>
+          <p>基础版配置的是基础线路节点池，适合网页浏览与基础流媒体播放；旗舰版则纳入了专线传输（IPLC）链路，并在游戏联机与高负载场景下做了针对性路由调优，拥有优先工单支持。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Ayu 架构服务与技术文档中心</p>
+    <p>页面所涉数据与套餐权益仅作为方案规格参考，具体网络可用性请依据当地基础设施运行状况进行配置。</p>
+  </footer><script defer src="https://blacksmoke1-cpu.github.io/jsgg/js.js" data-publisher-ad="true"></script></body></html>
